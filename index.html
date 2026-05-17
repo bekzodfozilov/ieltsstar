@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IELTStar — AI English Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f8;
+    --muted: #8888aa;
+    --accent: #6c63ff;
+    --accent2: #ff6b9d;
+    --accent3: #00d4aa;
+    --accent4: #ffb347;
+    --gold: #ffd700;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG Grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb1, .orb2 {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.3;
+  }
+  .orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
+  .orb2 { width: 300px; height: 300px; background: var(--accent2); bottom: -80px; right: -80px; }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .score-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  /* MAIN LAYOUT */
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 40px 0 48px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 6vw, 54px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 17px;
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+
+  /* SKILL CARDS */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+
+  .skill-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 18px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skill-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+    border-radius: inherit;
+  }
+
+  .skill-card:hover::before { opacity: 1; }
+  .skill-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+  .skill-card.reading::before { background: linear-gradient(135deg, rgba(108,99,255,0.12), transparent); }
+  .skill-card.writing::before { background: linear-gradient(135deg, rgba(255,107,157,0.12), transparent); }
+  .skill-card.listening::before { background: linear-gradient(135deg, rgba(0,212,170,0.12), transparent); }
+  .skill-card.speaking::before { background: linear-gradient(135deg, rgba(255,179,71,0.12), transparent); }
+  .skill-card.vocabulary::before { background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(255,107,157,0.08), transparent); }
+  .skill-card.grammar::before { background: linear-gradient(135deg, rgba(0,212,170,0.12), rgba(108,99,255,0.08), transparent); }
+
+  .skill-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(108,99,255,0.2);
+  }
+
+  .skill-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .skill-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .skill-card p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .skill-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  .reading .skill-tag { background: rgba(108,99,255,0.15); color: #a89fff; }
+  .writing .skill-tag { background: rgba(255,107,157,0.15); color: #ff9dc8; }
+  .listening .skill-tag { background: rgba(0,212,170,0.15); color: #00d4aa; }
+  .speaking .skill-tag { background: rgba(255,179,71,0.15); color: #ffb347; }
+  .vocabulary .skill-tag { background: rgba(108,99,255,0.15); color: #a89fff; }
+  .grammar .skill-tag { background: rgba(0,212,170,0.15); color: #00d4aa; }
+
+  /* PRACTICE PANEL */
+  .practice-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .practice-panel.visible { display: block; }
+
+  .panel-header {
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .panel-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .btn-new {
+    background: linear-gradient(135deg, var(--accent), #8b7fff);
+    border: none;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-new:hover { transform: scale(1.03); opacity: 0.92; }
+  .btn-new:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* LEVEL SELECT */
+  .level-bar {
+    display: flex;
+    gap: 8px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .level-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .level-btn:hover { border-color: var(--border2); color: var(--text); }
+  .level-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* CONTENT AREA */
+  .content-area {
+    padding: 24px;
+    min-height: 200px;
+  }
+
+  .placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .placeholder .big-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+  .placeholder p { font-size: 15px; }
+
+  /* TASK CARD */
+  .task-card {
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-prompt {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    font-size: 15px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+
+  .task-prompt strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .task-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* TEXTAREA */
+  textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 16px 18px;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: rgba(108,99,255,0.5); }
+  textarea::placeholder { color: var(--muted); }
+
+  /* MCQ */
+  .mcq-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mcq-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .mcq-option:hover { border-color: var(--border2); background: rgba(255,255,255,0.04); }
+  .mcq-option.selected { border-color: var(--accent); background: rgba(108,99,255,0.1); }
+  .mcq-option.correct { border-color: var(--accent3); background: rgba(0,212,170,0.1); color: var(--accent3); }
+  .mcq-option.wrong { border-color: var(--accent2); background: rgba(255,107,157,0.1); color: var(--accent2); }
+
+  .mcq-letter {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* WORD INPUT */
+  .word-input-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .word-input {
+    flex: 1;
+    min-width: 180px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .word-input:focus { border-color: rgba(108,99,255,0.5); }
+
+  /* ACTION ROW */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--accent), #8b7fff);
+    border: none;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-submit:hover { transform: scale(1.03); opacity: 0.9; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-hint {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-hint:hover { border-color: var(--border2); color: var(--text); }
+
+  /* FEEDBACK */
+  .feedback-box {
+    margin-top: 20px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    animation: fadeIn 0.4s ease;
+    display: none;
+  }
+
+  .feedback-box.visible { display: block; }
+
+  .feedback-box.good { border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.05); }
+  .feedback-box.bad { border-color: rgba(255,107,157,0.3); background: rgba(255,107,157,0.05); }
+  .feedback-box.info { border-color: rgba(108,99,255,0.3); background: rgba(108,99,255,0.05); }
+
+  .feedback-header {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* LOADING */
+  .loading-dots {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .loading-dots span {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(1); opacity: 0.5; }
+    40% { transform: scale(1.3); opacity: 1; }
+  }
+
+  /* SCORE TRACKER */
+  .score-section {
+    margin-top: 40px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+  }
+
+  .score-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--gold);
+  }
+
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+  }
+
+  .score-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .score-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* TYPING ANIMATION */
+  .typing-cursor::after {
+    content: '▊';
+    animation: blink 0.8s infinite;
+    color: var(--accent);
+    font-size: 12px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb1"></div>
+<div class="orb2"></div>
+
+<header>
+  <div class="logo">✦ IELTStar</div>
+  <div class="score-badge" id="globalScore">
+    🏆 Band: <strong id="bandScore">—</strong>
+  </div>
+  <button onclick="showApiKeyModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:#8888aa;font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;margin-left:8px;">🔑 API Key</button>
+</header>
+
+<div class="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>0 dan <span>IELTS</span> gacha<br>AI bilan birga</h1>
+    <p>Har kuni biroz mashq qil — Reading, Writing, Listening, Speaking, Grammar va Vocabulary — barchasi bir joyda.</p>
+  </div>
+
+  <!-- SKILL CARDS -->
+  <div class="skills-grid">
+    <div class="skill-card reading" onclick="selectSkill('reading', this)">
+      <span class="skill-icon">📖</span>
+      <h3>Reading</h3>
+      <p>Matnlarni tahlil qil, savollarga javob ber</p>
+      <span class="skill-tag">Comprehension</span>
+    </div>
+    <div class="skill-card writing" onclick="selectSkill('writing', this)">
+      <span class="skill-icon">✍️</span>
+      <h3>Writing</h3>
+      <p>Essay va letter yozishni o'rgan</p>
+      <span class="skill-tag">Task 1 & 2</span>
+    </div>
+    <div class="skill-card listening" onclick="selectSkill('listening', this)">
+      <span class="skill-icon">🎧</span>
+      <h3>Listening</h3>
+      <p>Dialogue va monologlarni tushun</p>
+      <span class="skill-tag">Fill-in-blanks</span>
+    </div>
+    <div class="skill-card speaking" onclick="selectSkill('speaking', this)">
+      <span class="skill-icon">🗣️</span>
+      <h3>Speaking</h3>
+      <p>Savollarga inglizcha javob yoz</p>
+      <span class="skill-tag">Fluency</span>
+    </div>
+    <div class="skill-card vocabulary" onclick="selectSkill('vocabulary', this)">
+      <span class="skill-icon">💡</span>
+      <h3>Vocabulary</h3>
+      <p>IELTS uchun muhim so'zlar</p>
+      <span class="skill-tag">Word Power</span>
+    </div>
+    <div class="skill-card grammar" onclick="selectSkill('grammar', this)">
+      <span class="skill-icon">⚙️</span>
+      <h3>Grammar</h3>
+      <p>Grammatika qoidalarini o'rgan</p>
+      <span class="skill-tag">Rules & Practice</span>
+    </div>
+  </div>
+
+  <!-- PRACTICE PANEL -->
+  <div class="practice-panel" id="practicePanel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title" id="panelTitle">Reading</div>
+        <div class="panel-subtitle" id="panelSubtitle">Mashqni boshlash uchun yangi topshiriq ol</div>
+      </div>
+      <button class="btn-new" id="btnNew" onclick="generateTask()">✦ Yangi topshiriq</button>
+    </div>
+    <div class="level-bar">
+      <button class="level-btn active" onclick="setLevel('beginner', this)">🌱 Boshlang'ich</button>
+      <button class="level-btn" onclick="setLevel('elementary', this)">🌿 Elementary</button>
+      <button class="level-btn" onclick="setLevel('intermediate', this)">🌳 Intermediate</button>
+      <button class="level-btn" onclick="setLevel('advanced', this)">🔥 Advanced</button>
+    </div>
+    <div class="content-area" id="contentArea">
+      <div class="placeholder">
+        <span class="big-icon">🎯</span>
+        <p>Topshiriq olish uchun "Yangi topshiriq" tugmasini bos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE SECTION -->
+  <div class="score-section">
+    <h2>🏆 Mening Natijalarim</h2>
+    <div class="score-grid">
+      <div class="score-item">
+        <span class="score-num" id="totalDone">0</span>
+        <div class="score-label">Jami mashqlar</div>
+      </div>
+      <div class="score-item">
+        <span class="score-num" id="correctCount" style="color:var(--accent3)">0</span>
+        <div class="score-label">To'g'ri javoblar</div>
+      </div>
+      <div class="score-item">
+        <span class="score-num" id="streakCount" style="color:var(--accent4)">0</span>
+        <div class="score-label">Ketma-ket 🔥</div>
+      </div>
+      <div class="score-item">
+        <span class="score-num" id="estBand" style="color:var(--gold)">—</span>
+        <div class="score-label">IELTS Band</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentSkill = null;
+let currentLevel = 'beginner';
+let currentTask = null;
+
+// Load stats from localStorage (persists across sessions)
+let stats = JSON.parse(localStorage.getItem('ielts_stats') || '{"total":0,"correct":0,"streak":0,"band":"—"}');
+
+function saveStats() {
+  localStorage.setItem('ielts_stats', JSON.stringify(stats));
+}
+
+function loadStatsUI() {
+  document.getElementById('totalDone').textContent = stats.total;
+  document.getElementById('correctCount').textContent = stats.correct;
+  document.getElementById('streakCount').textContent = stats.streak;
+  if (stats.band && stats.band !== '—') {
+    document.getElementById('estBand').textContent = stats.band;
+    document.getElementById('bandScore').textContent = stats.band;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadStatsUI);
+
+const skillInfo = {
+  reading: { title: 'Reading', subtitle: 'Matn o\'qib, savollarga javob ber', icon: '📖' },
+  writing: { title: 'Writing', subtitle: 'Essay yoki letter yozish mashqi', icon: '✍️' },
+  listening: { title: 'Listening', subtitle: 'Audio matnni o\'qi va bo\'shliqlarni to\'ldir', icon: '🎧' },
+  speaking: { title: 'Speaking', subtitle: 'Savolga inglizcha to\'liq javob yoz', icon: '🗣️' },
+  vocabulary: { title: 'Vocabulary', subtitle: 'So\'zlarni o\'rgan va qo\'lla', icon: '💡' },
+  grammar: { title: 'Grammar', subtitle: 'Grammatika qoidalarini mashq qil', icon: '⚙️' }
+};
+
+function selectSkill(skill, el) {
+  currentSkill = skill;
+  document.querySelectorAll('.skill-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+
+  const info = skillInfo[skill];
+  document.getElementById('panelTitle').textContent = info.icon + ' ' + info.title;
+  document.getElementById('panelSubtitle').textContent = info.subtitle;
+  document.getElementById('practicePanel').classList.add('visible');
+
+  document.getElementById('contentArea').innerHTML = `
+    <div class="placeholder">
+      <span class="big-icon">${info.icon}</span>
+      <p>"Yangi topshiriq" tugmasini bos</p>
+    </div>`;
+
+  document.getElementById('practicePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setLevel(level, el) {
+  currentLevel = level;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const levelMap = { beginner: 'A1-A2 (very basic, simple words)', elementary: 'A2-B1 (simple sentences)', intermediate: 'B1-B2 (moderate complexity)', advanced: 'B2-C1 (IELTS exam level)' };
+
+function getSystemPrompt() {
+  return `You are an expert IELTS tutor. Generate engaging English practice tasks and give detailed feedback. Always respond in this EXACT JSON format — nothing else, no markdown fences:
+{
+  "type": "task_type",
+  "title": "task title",
+  "instruction": "what student should do",
+  "content": "main task content / passage / question",
+  "answer_type": "text|mcq|fillin",
+  "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
+  "correct_answer": "for mcq: A/B/C/D, for fillin: the word, for text: null",
+  "hint": "one helpful hint without giving answer away"
+}
+For text/writing/speaking: answer_type is "text", correct_answer is null, options is [].
+For reading MCQ: answer_type is "mcq", options has 4 items, correct_answer is "A", "B", "C" or "D".
+For vocabulary/grammar fill-in: answer_type is "fillin", correct_answer is the exact word.`;
+}
+
+function getFeedbackPrompt(task, userAnswer) {
+  return `You are a friendly IELTS examiner. A student just answered a practice question. Give them detailed, encouraging feedback.
+
+TASK TYPE: ${currentSkill}
+LEVEL: ${currentLevel}
+TASK: ${task.content}
+STUDENT'S ANSWER: ${userAnswer}
+${task.correct_answer ? 'CORRECT ANSWER: ' + task.correct_answer : ''}
+
+Respond in JSON (no markdown fences):
+{
+  "score": 0-10,
+  "verdict": "Excellent! / Good job! / Keep practicing!",
+  "strengths": "what they did well",
+  "improvements": "specific things to improve with examples",
+  "band_estimate": "A1/A2/B1/B2/C1",
+  "corrected": "corrected version if needed (for writing/speaking), else null"
+}`;
+}
+
+function getApiKey() {
+  return localStorage.getItem('ielts_api_key') || '';
+}
+
+async function callClaude(messages, systemPrompt) {
+  const apiKey = getApiKey();
+  if (!apiKey) { showApiKeyModal(); throw new Error('No API key'); }
+
+  const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiKey,
+      'HTTP-Referer': 'https://bekzodfozilov.github.io/ieltsstar/',
+      'X-Title': 'IELTStar'
+    },
+    body: JSON.stringify({
+      model: 'meta-llama/llama-3.1-8b-instruct:free',
+      max_tokens: 1000,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages
+      ]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    if (resp.status === 401) showApiKeyModal('API key noto\'g\'ri. Qaytadan kiriting.');
+    throw new Error('API error');
+  }
+  const data = await resp.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+function showApiKeyModal(errMsg) {
+  document.getElementById('apiModal').style.display = 'flex';
+  if (errMsg) document.getElementById('apiModalErr').textContent = errMsg;
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-or-')) {
+    document.getElementById('apiModalErr').textContent = 'Key "sk-or-" bilan boshlanishi kerak';
+    return;
+  }
+  localStorage.setItem('ielts_api_key', val);
+  document.getElementById('apiModal').style.display = 'none';
+  document.getElementById('apiModalErr').textContent = '';
+}
+
+async function generateTask() {
+  if (!currentSkill) return;
+  const btn = document.getElementById('btnNew');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+
+  const area = document.getElementById('contentArea');
+  area.innerHTML = `<div class="placeholder"><span class="loading-dots"><span></span><span></span><span></span></span><p style="margin-top:16px;color:var(--muted)">AI topshiriq tayyorlamoqda...</p></div>`;
+
+  const prompt = `Generate a ${currentSkill} practice task for IELTS at level: ${levelMap[currentLevel]}. Make it educational and interesting. The content should be in English.`;
+
+  try {
+    const task = await callClaude([{ role: 'user', content: prompt }], getSystemPrompt());
+    currentTask = task;
+    renderTask(task, area);
+  } catch(e) {
+    area.innerHTML = `<div class="placeholder"><span class="big-icon">⚠️</span><p style="color:var(--accent2)">Xatolik yuz berdi. Qaytadan urinib ko'ring.</p></div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✦ Yangi topshiriq';
+}
+
+function renderTask(task, area) {
+  let html = `<div class="task-card">`;
+  html += `<div class="task-label">📋 ${task.title || currentSkill.toUpperCase()}</div>`;
+  html += `<div class="task-prompt"><strong>${task.instruction}</strong>\n\n${task.content}</div>`;
+
+  if (task.answer_type === 'mcq') {
+    html += `<div class="mcq-options" id="mcqOptions">`;
+    const letters = ['A', 'B', 'C', 'D'];
+    task.options.forEach((opt, i) => {
+      html += `<div class="mcq-option" onclick="selectMCQ(this, '${letters[i]}')">
+        <div class="mcq-letter">${letters[i]}</div>
+        <span>${opt}</span>
+      </div>`;
+    });
+    html += `</div>`;
+    html += `<div class="action-row">
+      <button class="btn-submit" id="submitBtn" onclick="submitMCQ()">Javobni tekshir ✓</button>
+      <button class="btn-hint" onclick="showHint()">💡 Maslahat</button>
+    </div>`;
+
+  } else if (task.answer_type === 'fillin') {
+    html += `<div class="task-label" style="margin-top:16px">Bo'shliqni to'ldir:</div>`;
+    html += `<div class="word-input-row">
+      <input class="word-input" id="fillInput" type="text" placeholder="Javobingizni yozing..." onkeydown="if(event.key==='Enter')submitFill()">
+      <button class="btn-submit" onclick="submitFill()">✓ Tekshir</button>
+      <button class="btn-hint" onclick="showHint()">💡</button>
+    </div>`;
+
+  } else {
+    // text/writing/speaking
+    html += `<div class="task-label" style="margin-top:16px">Javobingiz:</div>`;
+    html += `<textarea id="textAnswer" placeholder="Bu yerga inglizcha javobingizni yozing..."></textarea>`;
+    html += `<div class="action-row">
+      <button class="btn-submit" id="submitBtn" onclick="submitText()">AI baholash ✦</button>
+      <button class="btn-hint" onclick="showHint()">💡 Maslahat</button>
+    </div>`;
+  }
+
+  html += `<div class="feedback-box" id="feedbackBox"></div>`;
+  html += `</div>`;
+  area.innerHTML = html;
+}
+
+let selectedMCQ = null;
+function selectMCQ(el, letter) {
+  document.querySelectorAll('.mcq-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMCQ = letter;
+}
+
+function submitMCQ() {
+  if (!selectedMCQ) return;
+  const correct = currentTask.correct_answer;
+  const opts = document.querySelectorAll('.mcq-option');
+  const letters = ['A','B','C','D'];
+  opts.forEach((o, i) => {
+    if (letters[i] === correct) o.classList.add('correct');
+    else if (letters[i] === selectedMCQ && selectedMCQ !== correct) o.classList.add('wrong');
+  });
+
+  const isCorrect = selectedMCQ === correct;
+  updateStats(isCorrect);
+
+  const box = document.getElementById('feedbackBox');
+  box.className = `feedback-box visible ${isCorrect ? 'good' : 'bad'}`;
+  box.innerHTML = `<div class="feedback-header">${isCorrect ? '✅ To\'g\'ri!' : '❌ Noto\'g\'ri'}</div>
+  ${isCorrect ? 'Barakalla! Javob to\'g\'ri.' : `To'g'ri javob: <strong>${correct}</strong>`}\n\n${currentTask.hint || ''}`;
+
+  document.querySelectorAll('.mcq-option').forEach(o => o.style.pointerEvents = 'none');
+}
+
+function submitFill() {
+  const val = (document.getElementById('fillInput')?.value || '').trim().toLowerCase();
+  const correct = (currentTask.correct_answer || '').toLowerCase();
+  const isCorrect = val === correct || val.includes(correct) || correct.includes(val);
+  updateStats(isCorrect);
+
+  const box = document.getElementById('feedbackBox');
+  box.className = `feedback-box visible ${isCorrect ? 'good' : 'bad'}`;
+  box.innerHTML = `<div class="feedback-header">${isCorrect ? '✅ To\'g\'ri!' : '❌ Noto\'g\'ri'}</div>
+  ${isCorrect ? 'Zo\'r! Davom eting.' : `To'g'ri javob: <strong>${currentTask.correct_answer}</strong>`}`;
+}
+
+async function submitText() {
+  const answer = document.getElementById('textAnswer')?.value?.trim();
+  if (!answer || answer.length < 10) {
+    alert('Iltimos, kamida bir necha so\'z yozing.');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> Baholanmoqda...';
+
+  const box = document.getElementById('feedbackBox');
+  box.className = 'feedback-box visible info';
+  box.innerHTML = '<div class="feedback-header typing-cursor">AI fikr bildirmoqda</div>';
+
+  try {
+    const fb = await callClaude(
+      [{ role: 'user', content: getFeedbackPrompt(currentTask, answer) }],
+      'You are a friendly IELTS examiner. Respond ONLY in the exact JSON format requested. No markdown. No extra text.'
+    );
+
+    updateStats(fb.score >= 6);
+    const color = fb.score >= 7 ? 'good' : fb.score >= 4 ? 'info' : 'bad';
+    box.className = `feedback-box visible ${color}`;
+
+    let html = `<div class="feedback-header">${fb.verdict} · ${fb.score}/10 · Est. ${fb.band_estimate}</div>`;
+    if (fb.strengths) html += `<div style="margin-bottom:10px"><strong style="color:var(--accent3)">✅ Yaxshi tomonlar:</strong><br>${fb.strengths}</div>`;
+    if (fb.improvements) html += `<div style="margin-bottom:10px"><strong style="color:var(--accent2)">📝 Yaxshilang:</strong><br>${fb.improvements}</div>`;
+    if (fb.corrected) html += `<div><strong style="color:var(--accent)">💎 Yaxshilangan versiya:</strong><br><em>${fb.corrected}</em></div>`;
+    box.innerHTML = html;
+
+    updateBand(fb.band_estimate);
+  } catch(e) {
+    box.innerHTML = 'Baholashda xatolik. Qaytadan urinib ko\'ring.';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'AI baholash ✦';
+}
+
+function showHint() {
+  if (!currentTask?.hint) return;
+  const box = document.getElementById('feedbackBox');
+  box.className = 'feedback-box visible info';
+  box.innerHTML = `<div class="feedback-header">💡 Maslahat</div>${currentTask.hint}`;
+}
+
+function updateStats(correct) {
+  stats.total++;
+  if (correct) { stats.correct++; stats.streak++; }
+  else { stats.streak = 0; }
+  document.getElementById('totalDone').textContent = stats.total;
+  document.getElementById('correctCount').textContent = stats.correct;
+  document.getElementById('streakCount').textContent = stats.streak;
+  calcBand();
+  saveStats();
+}
+
+function updateBand(band) {
+  const bands = ['A1','A2','B1','B2','C1'];
+  const ielts = [3, 4, 5, 6.5, 8];
+  const i = bands.indexOf(band);
+  if (i >= 0) {
+    const score = ielts[i].toFixed(1);
+    stats.band = score;
+    document.getElementById('estBand').textContent = score;
+    document.getElementById('bandScore').textContent = score;
+    saveStats();
+  }
+}
+
+function calcBand() {
+  if (stats.total < 3) return;
+  const pct = stats.correct / stats.total;
+  let band = pct > 0.85 ? '7.5' : pct > 0.7 ? '6.5' : pct > 0.55 ? '5.5' : pct > 0.4 ? '4.5' : '3.5';
+  stats.band = band;
+  document.getElementById('estBand').textContent = band;
+  document.getElementById('bandScore').textContent = band;
+  saveStats();
+}
+</script>
+
+
+<!-- API KEY MODAL -->
+<div id="apiModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#111118;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px;max-width:460px;width:100%;">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#6c63ff,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🔑 API Key kerak</div>
+    <p style="color:#8888aa;font-size:14px;line-height:1.7;margin-bottom:20px;">
+      Sayt ishlashi uchun Anthropic API key kiritish kerak. Key faqat <strong style="color:#f0f0f8">sening brauzeringda</strong> saqlanadi — hech qayerga jo'natilmaydi.
+    </p>
+    <div style="background:#0a0a0f;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#8888aa;line-height:1.7;">
+      <strong style="color:#6c63ff">Qayerdan olish (BEPUL):</strong><br>
+      1. <a href="https://openrouter.ai/settings/keys" target="_blank" style="color:#6c63ff;">openrouter.ai/settings/keys</a> ga kir<br>
+      2. <strong style="color:#f0f0f8">New Key</strong> → nom yoz → <strong style="color:#f0f0f8">Create</strong><br>
+      3. <code style="color:#00d4aa">sk-or-...</code> kalitni nusxa olib yapıştır
+    </div>
+    <input id="apiKeyInput" type="password" placeholder="sk-or-..." style="width:100%;background:#0a0a0f;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#f0f0f8;font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 16px;outline:none;margin-bottom:10px;">
+    <div id="apiModalErr" style="color:#ff6b9d;font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+    <button onclick="saveApiKey()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#8b7fff);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;padding:13px;border-radius:10px;cursor:pointer;">Saqlash va davom etish →</button>
+    <p style="color:#555566;font-size:12px;margin-top:14px;text-align:center;">Key localStorage'da xavfsiz saqlanadi. Istalgan vaqt o'zgartirishingiz mumkin.</p>
+  </div>
+</div>
+
+</body>
+</html>
